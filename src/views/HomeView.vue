@@ -1,14 +1,14 @@
 <script>
 import axios from "axios";
-
 export default {
   data: function () {
     return {
-      message: "Welcome to the Places App!",
+      message: "Some of LA's best places to visit!",
+      greeting: "Feel free to add more suggestions to this list.",
       places: [],
+      newPlaceParams: {},
       currentPlace: {},
       editPlaceParams: {},
-      newPlaceParams: {},
     };
   },
   created: function () {
@@ -16,10 +16,19 @@ export default {
   },
   methods: {
     indexPlaces: function () {
-      axios.get("/places").then((response) => {
+      axios.get("http://localhost:3000/places.json").then((response) => {
         this.places = response.data;
-        console.log("All places:", this.places);
+        console.log("All places", this.places);
       });
+    },
+    createPlace: function () {
+      axios
+        .post("http://localhost:3000/places.json", this.newPlaceParams)
+        .then((response) => {
+          console.log("Place succesfully created", response.data);
+          this.places.push(response.data);
+        })
+        .catch((error) => console.log(error.response));
     },
     showPlace: function (place) {
       console.log(place);
@@ -27,23 +36,14 @@ export default {
       this.editPlaceParams = place;
       document.querySelector("#place-details").showModal();
     },
-    createPlace: function () {
-      axios
-        .post("/places.json", this.newPlaceParams)
-        .then((response) => {
-          console.log("Sucess!", response.data);
-          this.places.push(response.data);
-        })
-        .catch((error) => console.log(error.response));
-    },
     updatePlace: function (place) {
-      axios.patch("/places/" + place.id + ".json", this.editPlaceParams).then((response) => {
-        console.log("Success!", response.data);
+      axios.patch("http://localhost:3000/places/" + place.id, this.editPlaceParams).then((response) => {
+        console.log("Successfully updated place!", response.data);
       });
     },
     destroyPlace: function (place) {
-      axios.delete("/places/" + place.id).then((response) => {
-        console.log("Success!", response.data);
+      axios.delete("http://localhost:3000/places/" + place.id).then((response) => {
+        console.log("Successfully deleted place!", response.data);
         var index = this.places.indexOf(place);
         this.places.splice(index, 1);
       });
@@ -55,33 +55,34 @@ export default {
 <template>
   <div class="home">
     <h1>{{ message }}</h1>
-    <h2>New Place</h2>
+    <p>{{ greeting }}</p>
+
     <div>
       Name:
       <input type="text" v-model="newPlaceParams.name" />
-      Address:
-      <input type="text" v-model="newPlaceParams.address" />
+      Adress:
+      <input type="text" v-model="newPlaceParams.adress" />
     </div>
-    <button v-on:click="createPlace()">Create</button>
-    <h2>All Places</h2>
+    <button v-on:click="createPlace()">Create Place</button>
     <div v-for="place in places" v-bind:key="place.id">
-      <h4>{{ place.name }}</h4>
-      <p>{{ place.address }}</p>
-      <button v-on:click="showPlace(place)">More info</button>
+      <h3>{{ place.name }}</h3>
+      <p>{{ place.adress }}</p>
+      <p><button v-on:click="showPlace(place)">More Information</button></p>
+      <p>__________________________________________________</p>
     </div>
     <dialog id="place-details">
       <form method="dialog">
-        <h1>Place Info</h1>
+        <h2>Place Info</h2>
         <p>
           Name:
           <input type="text" v-model="editPlaceParams.name" />
         </p>
         <p>
-          Address:
-          <input type="text" v-model="editPlaceParams.address" />
+          Adress:
+          <input type="text" v-model="editPlaceParams.adress" />
         </p>
-        <button v-on:click="updatePlace(editPlaceParams)">Update</button>
-        <button v-on:click="destroyPlace(currentPlace)">Delete</button>
+        <button v-on:click="updatePlace(currentPlace)">Update Place</button>
+        <button v-on:click="destroyPlace(currentPlace)">Delete Place</button>
         <button>Close</button>
       </form>
     </dialog>
